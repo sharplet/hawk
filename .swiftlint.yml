@@ -1,2 +1,5 @@
+identifier_name:
+  excluded:
+    - fd
 trailing_comma:
   mandatory_comma: true
