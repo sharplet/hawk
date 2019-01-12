@@ -11,7 +11,7 @@ for path in paths {
 
   let source = DispatchSource.makeFileSystemObjectSource(
     fileDescriptor: fd,
-    eventMask: [.delete, .rename, .write],
+    eventMask: [.attrib, .delete, .rename, .write],
     queue: .main
   )
 
@@ -27,6 +27,8 @@ for path in paths {
     let event: String
 
     switch source.data {
+    case .attrib:
+      event = "attrib"
     case .delete:
       event = "delete"
     case .rename:
