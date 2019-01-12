@@ -1,10 +1,26 @@
 import Darwin
 import Dispatch
+import Files
 
-let paths = CommandLine.arguments.dropFirst()
+var paths = Array(CommandLine.arguments.dropFirst())
 var sources: [DispatchSourceFileSystemObject] = []
 
-for path in paths {
+while !paths.isEmpty {
+  let path = paths.removeFirst()
+
+  if File.isDirectory(path) {
+    File.forEachEntry(inDirectory: path) { entry in
+      guard !entry.hasPrefix(".") else { return }
+      let child = "\(path)/\(entry)"
+
+      if Path.dirname(child) == "." {
+        paths.append(entry)
+      } else {
+        paths.append(child)
+      }
+    }
+  }
+
   guard case let fd = open(path, O_EVTONLY),
     fd >= 0
     else { perror(path); continue }

@@ -5,7 +5,9 @@ import PackageDescription
 let package = Package(
   name: "observer",
   targets: [
-    .target(name: "observer"),
+    .target(name: "observer", dependencies: ["Files"]),
+    .target(name: "Files", dependencies: ["Clibc"]),
+    .target(name: "Clibc"),
     .testTarget(name: "ObserverTests", dependencies: ["observer"]),
   ]
 )
