@@ -2,31 +2,22 @@ import Darwin
 import Dispatch
 import Files
 
-var paths = Array(CommandLine.arguments.dropFirst())
+var paths = CommandLine.arguments.dropFirst().map(Path.init)
 var sources: [DispatchSourceFileSystemObject] = []
 
 while !paths.isEmpty {
   let path = paths.removeFirst()
+  guard let file = File(path) else { continue }
 
-  if File.isDirectory(path) {
+  if file.isDirectory {
     File.forEachEntry(inDirectory: path) { entry in
       guard !entry.hasPrefix(".") else { return }
-      let child = "\(path)/\(entry)"
-
-      if Path.dirname(child) == "." {
-        paths.append(entry)
-      } else {
-        paths.append(child)
-      }
+      paths.append(path + entry)
     }
   }
 
-  guard case let fd = open(path, O_EVTONLY),
-    fd >= 0
-    else { perror(path); continue }
-
   let source = DispatchSource.makeFileSystemObjectSource(
-    fileDescriptor: fd,
+    fileDescriptor: file.descriptor,
     eventMask: [.attrib, .delete, .rename, .write],
     queue: .main
   )
@@ -34,7 +25,7 @@ while !paths.isEmpty {
   sources.append(source)
 
   source.setCancelHandler {
-    close(fd)
+    _ = file
   }
 
   var count = 0
