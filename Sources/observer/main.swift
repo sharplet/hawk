@@ -2,8 +2,8 @@ import Dispatch
 import Files
 import Foundation
 
-func initialize() throws {
-  var paths = CommandLine.arguments.dropFirst().map(Path.init)
+func startObserving(_ paths: [Path]) throws -> [DispatchSourceFileSystemObject] {
+  var paths = paths
   var sources: [DispatchSourceFileSystemObject] = []
 
   while !paths.isEmpty {
@@ -28,7 +28,7 @@ func initialize() throws {
 
     var count = 0
 
-    source.setEventHandler {
+    source.setEventHandler { [unowned source] in
       let event: String
 
       switch source.data {
@@ -58,10 +58,30 @@ func initialize() throws {
       print()
     }
   }
+
+  return sources
+}
+
+@discardableResult
+func handleInterrupt(execute body: @escaping () -> Void) -> DispatchSourceSignal {
+  signal(SIGINT, SIG_IGN)
+  let source = DispatchSource.makeSignalSource(signal: SIGINT, queue: .main)
+  source.setEventHandler(handler: body)
+  source.setCancelHandler { _ = source }
+  source.resume()
+  return source
 }
 
 do {
-  try initialize()
+  let paths = CommandLine.arguments.dropFirst().map(Path.init)
+  var observations = try startObserving(paths)
+  handleInterrupt {
+    observations.forEach { $0.cancel() }
+    observations.removeAll()
+    DispatchQueue.main.async {
+      exit(0)
+    }
+  }
   dispatchMain()
 } catch {
   var message = error.localizedDescription
