@@ -10,11 +10,8 @@ func initialize() throws {
     let path = paths.removeFirst()
     let file = try File(path)
 
-    if file.isDirectory {
-      File.forEachEntry(inDirectory: path) { entry in
-        guard !entry.hasPrefix(".") else { return }
-        paths.append(path + entry)
-      }
+    Directory(file)?.enumerateEntries {
+      paths.append($0)
     }
 
     let source = DispatchSource.makeFileSystemObjectSource(
