@@ -53,6 +53,13 @@ func initialize() throws {
     }
 
     source.resume()
+
+    print(path, terminator: "")
+    if File.isDirectory(path) {
+      print("/")
+    } else {
+      print()
+    }
   }
 }
 
