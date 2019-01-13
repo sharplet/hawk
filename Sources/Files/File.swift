@@ -5,9 +5,9 @@ public final class File {
   public let descriptor: Int32
   public let path: Path
 
-  public init?(_ path: Path) {
+  public init(_ path: Path) throws {
     self.descriptor = open(path._path, 0)
-    guard self.descriptor >= 0 else { return nil }
+    guard self.descriptor >= 0 else { throw POSIXError.current(path) }
     self.path = path
   }
 
