@@ -37,26 +37,9 @@ final class App {
         }
       } else {
         var count = 0
-
         let observer = FileObserver(file: file, target: .main) { event in
-          let description: String
-
-          switch event {
-          case .attrib:
-            description = "attrib"
-          case .delete:
-            description = "delete"
-          case .rename:
-            description = "rename"
-          case .write:
-            description = "write"
-          default:
-            return
-          }
-
           count += 1
-
-          print("\(description): \(path) (\(count))")
+          print("\(event): \(path) (\(count))")
         }
         newObservation = Observation(observer: observer)
       }
