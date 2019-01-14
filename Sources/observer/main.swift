@@ -21,41 +21,29 @@ func startObserving(_ paths: [Path]) throws -> [Observation] {
         paths.append($0)
       }
     } else {
-      let source = DispatchSource.makeFileSystemObjectSource(
-        fileDescriptor: file.descriptor,
-        eventMask: [.attrib, .delete, .rename, .write],
-        queue: .main
-      )
-      newObservation = Observation(dispatchSource: source)
-
-      source.setCancelHandler {
-        _ = file
-      }
-
       var count = 0
 
-      source.setEventHandler { [unowned source] in
-        let event: String
+      let observer = FileObserver(file: file, target: .main) { event in
+        let description: String
 
-        switch source.data {
+        switch event {
         case .attrib:
-          event = "attrib"
+          description = "attrib"
         case .delete:
-          event = "delete"
+          description = "delete"
         case .rename:
-          event = "rename"
+          description = "rename"
         case .write:
-          event = "write"
+          description = "write"
         default:
           return
         }
 
         count += 1
 
-        print("\(event): \(path) (\(count))")
+        print("\(description): \(path) (\(count))")
       }
-
-      source.resume()
+      newObservation = Observation(observer: observer)
     }
 
     observations.append(newObservation)

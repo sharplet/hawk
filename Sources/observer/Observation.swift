@@ -6,11 +6,11 @@ struct Observation {
 }
 
 extension Observation {
-  init(dispatchSource: DispatchSourceProtocol) {
-    self.cancel = dispatchSource.cancel
+  init(observer: DirectoryObserver) {
+    self.cancel = observer.cancel
   }
 
-  init(observer: DirectoryObserver) {
+  init(observer: FileObserver) {
     self.cancel = observer.cancel
   }
 }
