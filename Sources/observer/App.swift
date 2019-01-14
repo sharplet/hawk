@@ -3,14 +3,19 @@ import Dispatch
 import Files
 
 final class App {
-  private var observations: [Observation] = []
+  private let errorHandler: (App, Error) -> Void
+  private var observations: [Path: Observation] = [:]
 
-  func exit() {
-    observations.forEach { $0.cancel() }
+  init(errorHandler: @escaping (App, Error) -> Void) {
+    self.errorHandler = errorHandler
+  }
+
+  func exit(failure: Bool = false) {
+    observations.forEach { $1.cancel() }
     observations.removeAll()
 
     DispatchQueue.main.async {
-      Darwin.exit(0)
+      Darwin.exit(failure ? 1 : 0)
     }
   }
 
@@ -18,7 +23,15 @@ final class App {
     dispatchMain()
   }
 
-  func startObserving(_ paths: [Path]) throws {
+  func startObserving(_ paths: [Path]) {
+    do {
+      try _startObserving(paths)
+    } catch {
+      errorHandler(self, error)
+    }
+  }
+
+  private func _startObserving(_ paths: [Path]) throws {
     var paths = paths
 
     while !paths.isEmpty {
@@ -27,8 +40,8 @@ final class App {
       let newObservation: Observation
 
       if let directory = Directory(file) {
-        let observer = DirectoryObserver(directory: directory, target: .main) {
-          print($0)
+        let observer = DirectoryObserver(directory: directory, target: .main) { [unowned self] in
+          self.handleDirectoryChange($0, at: path)
         }
         newObservation = Observation(observer: observer)
 
@@ -44,14 +57,25 @@ final class App {
         newObservation = Observation(observer: observer)
       }
 
-      observations.append(newObservation)
+      observations[path] = newObservation
 
-      print(path, terminator: "")
+      print("added: \(path)", terminator: "")
       if File.isDirectory(path) {
         print("/")
       } else {
         print()
       }
     }
+  }
+
+  private func handleDirectoryChange(_ changeset: DirectoryObserver.Changeset, at path: Path) {
+    for deleted in changeset.deletedEntries {
+      let path = path + deleted
+      observations[path]?.cancel()
+      observations[path] = nil
+    }
+
+    let added = changeset.newEntries.map { path + $0 }
+    startObserving(added)
   }
 }

@@ -41,8 +41,8 @@ public final class DirectoryObserver {
 
 extension DirectoryObserver {
   public struct Changeset {
-    let deletedEntries: Set<String>
-    let newEntries: Set<String>
+    public let deletedEntries: Set<String>
+    public let newEntries: Set<String>
 
     fileprivate init?(currentContents: Set<String>, newContents: Set<String>) {
       self.deletedEntries = currentContents.subtracting(newContents)

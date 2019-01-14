@@ -1,6 +1,6 @@
 import Clibc
 
-public struct Path {
+public struct Path: Hashable {
   private(set) var _path: String
 
   public init(_ path: String) {
