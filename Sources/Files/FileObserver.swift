@@ -5,7 +5,7 @@ public final class FileObserver {
   private let queue: DispatchQueue
   private let source: DispatchSourceFileSystemObject
 
-  public init(file: File, target: DispatchQueue, changeHandler: @escaping (DispatchSource.FileSystemEvent) -> Void) {
+  public init(file: File, target: DispatchQueue, changeHandler: @escaping (Event) -> Void) {
     self.queue = DispatchQueue(label: "FileObserver:\(file.path)", target: target)
     self.source = DispatchSource.makeFileSystemObjectSource(
       fileDescriptor: file.descriptor,
@@ -14,8 +14,14 @@ public final class FileObserver {
     )
 
     self.source.setEventHandler { [unowned self] in
-      let event = self.source.data
-      changeHandler(event)
+      switch self.source.data {
+      case .attrib, .write:
+        changeHandler(.changed)
+      case .delete, .rename:
+        changeHandler(.deleted)
+      case let event:
+        preconditionFailure("unexpected file event: \(event)")
+      }
     }
 
     self.source.setCancelHandler {
@@ -33,5 +39,12 @@ public final class FileObserver {
 
   deinit {
     cancel()
+  }
+}
+
+extension FileObserver {
+  public enum Event {
+    case changed
+    case deleted
   }
 }

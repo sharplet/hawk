@@ -6,22 +6,31 @@ public final class DirectoryObserver {
   private let queue: DispatchQueue
   private let source: DispatchSourceFileSystemObject
 
-  public init(directory: Directory, target: DispatchQueue, changeHandler: @escaping (Changeset) -> Void) {
+  public init(directory: Directory, target: DispatchQueue, changeHandler: @escaping (Event) -> Void) {
     self.contents = directory.contents
     self.queue = DispatchQueue(label: "DirectoryObserver:\(directory.file.path)", target: target)
     self.source = DispatchSource.makeFileSystemObjectSource(
       fileDescriptor: directory.file.descriptor,
-      eventMask: .write,
+      eventMask: [.delete, .rename, .write],
       queue: self.queue
     )
 
     self.source.setEventHandler { [unowned self] in
-      let newContents = directory.contents
-      let changeset = Changeset(currentContents: self.contents, newContents: newContents)
-      self.contents = newContents
+      switch self.source.data {
+      case .delete, .rename:
+        changeHandler(.deleted)
 
-      if let changeset = changeset {
-        changeHandler(changeset)
+      case .write:
+        let newContents = directory.contents
+        let changeset = Changeset(currentContents: self.contents, newContents: newContents)
+        self.contents = newContents
+
+        if let changeset = changeset {
+          changeHandler(.contentsChanged(changeset))
+        }
+
+      case let event:
+        preconditionFailure("unexpected directory event: \(event)")
       }
     }
 
@@ -49,6 +58,11 @@ extension DirectoryObserver {
       self.newEntries = newContents.subtracting(currentContents)
       guard !deletedEntries.isEmpty || !newEntries.isEmpty else { return nil }
     }
+  }
+
+  public enum Event {
+    case contentsChanged(Changeset)
+    case deleted
   }
 }
 

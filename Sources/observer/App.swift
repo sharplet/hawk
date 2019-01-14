@@ -40,8 +40,13 @@ final class App {
       let newObservation: Observation
 
       if let directory = Directory(file) {
-        let observer = DirectoryObserver(directory: directory, target: .main) { [unowned self] in
-          self.handleDirectoryChange($0, at: path)
+        let observer = DirectoryObserver(directory: directory, target: .main) { [unowned self] event in
+          switch event {
+          case let .contentsChanged(changeset):
+            self.handleDirectoryChange(changeset, at: path)
+          case .deleted:
+            self.removeObservation(at: path)
+          }
         }
         newObservation = Observation(observer: observer)
 
@@ -49,10 +54,13 @@ final class App {
           paths.append($0)
         }
       } else {
-        var count = 0
-        let observer = FileObserver(file: file, target: .main) { event in
-          count += 1
-          print("\(event): \(path) (\(count))")
+        let observer = FileObserver(file: file, target: .main) { [unowned self] event in
+          switch event {
+          case .changed:
+            print("file changed: \(path)")
+          case .deleted:
+            self.removeObservation(at: path)
+          }
         }
         newObservation = Observation(observer: observer)
       }
@@ -70,12 +78,17 @@ final class App {
 
   private func handleDirectoryChange(_ changeset: DirectoryObserver.Changeset, at path: Path) {
     for deleted in changeset.deletedEntries {
-      let path = path + deleted
-      observations[path]?.cancel()
-      observations[path] = nil
+      removeObservation(at: path + deleted)
     }
 
     let added = changeset.newEntries.map { path + $0 }
     startObserving(added)
+  }
+
+  private func removeObservation(at path: Path) {
+    if let observation = observations.removeValue(forKey: path) {
+      observation.cancel()
+      print("removed: \(path)")
+    }
   }
 }
