@@ -2,6 +2,7 @@ import Dispatch
 
 public final class DirectoryObserver {
   private var contents: Set<String>
+  private var isCancelled = false
   private let queue: DispatchQueue
   private let source: DispatchSourceFileSystemObject
 
@@ -28,7 +29,13 @@ public final class DirectoryObserver {
   }
 
   public func cancel() {
+    guard !isCancelled else { return }
+    isCancelled = true
     source.cancel()
+  }
+
+  deinit {
+    cancel()
   }
 }
 

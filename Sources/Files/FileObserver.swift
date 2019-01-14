@@ -1,6 +1,7 @@
 import Dispatch
 
 public final class FileObserver {
+  private var isCancelled = false
   private let queue: DispatchQueue
   private let source: DispatchSourceFileSystemObject
 
@@ -25,6 +26,12 @@ public final class FileObserver {
   }
 
   public func cancel() {
+    guard !isCancelled else { return }
+    isCancelled = true
     source.cancel()
+  }
+
+  deinit {
+    cancel()
   }
 }
