@@ -46,7 +46,7 @@ final class App {
 
         guard observations[path] == nil else { continue }
 
-        let observer = DirectoryObserver(directory: directory, target: .main) { [unowned self] event in
+        newObservation = DirectoryObserver(directory: directory, target: .main) { [unowned self] event in
           switch event {
           case let .contentsChanged(changeset):
             self.handleDirectoryChange(changeset, at: path)
@@ -56,9 +56,8 @@ final class App {
             previousContents.forEach { self.removeObservation(at: $0) }
           }
         }
-        newObservation = Observation(observer: observer)
       } else {
-        let observer = FileObserver(file: file, target: .main) { [unowned self] event in
+        newObservation = FileObserver(file: file, target: .main) { [unowned self] event in
           switch event {
           case .changed:
             print("file changed: \(path)")
@@ -66,7 +65,6 @@ final class App {
             self.removeObservation(at: path)
           }
         }
-        newObservation = Observation(observer: observer)
       }
 
       observations[path] = newObservation
