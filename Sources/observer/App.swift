@@ -40,6 +40,12 @@ final class App {
       let newObservation: Observation
 
       if let directory = Directory(file) {
+        directory.enumerateEntries {
+          paths.append($0)
+        }
+
+        guard observations[path] == nil else { continue }
+
         let observer = DirectoryObserver(directory: directory, target: .main) { [unowned self] event in
           switch event {
           case let .contentsChanged(changeset):
@@ -51,10 +57,6 @@ final class App {
           }
         }
         newObservation = Observation(observer: observer)
-
-        directory.enumerateEntries {
-          paths.append($0)
-        }
       } else {
         let observer = FileObserver(file: file, target: .main) { [unowned self] event in
           switch event {
