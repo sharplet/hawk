@@ -22,6 +22,6 @@ public final class File {
 
 extension File {
   public static func isDirectory(_ path: Path) -> Bool {
-    return observer_is_dir(path._path) == 1
+    return hawk_is_dir(path._path) == 1
   }
 }

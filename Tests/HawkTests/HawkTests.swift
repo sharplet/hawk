@@ -1,7 +1,7 @@
 import class Foundation.Bundle
 import XCTest
 
-final class ObserverTests: XCTestCase {
+final class HawkTests: XCTestCase {
   func testExample() throws {
     // This is an example of a functional test case.
     // Use XCTAssert and related functions to verify your tests produce the correct
@@ -12,7 +12,7 @@ final class ObserverTests: XCTestCase {
       return
     }
 
-    let fooBinary = productsDirectory.appendingPathComponent("observer")
+    let fooBinary = productsDirectory.appendingPathComponent("hawk")
 
     let process = Process()
     process.executableURL = fooBinary

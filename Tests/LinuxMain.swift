@@ -1,8 +1,8 @@
 import XCTest
 
-import ObserverTests
+import HawkTests
 
 var tests = [XCTestCaseEntry]()
-tests += ObserverTests.__allTests()
+tests += HawkTests.__allTests()
 
 XCTMain(tests)

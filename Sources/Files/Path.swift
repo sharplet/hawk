@@ -9,7 +9,7 @@ public struct Path: Hashable {
 
   public var basename: String {
     return _path.withCString { path in
-      guard let name = observer_basename(path) else {
+      guard let name = hawk_basename(path) else {
         preconditionFailure("path name too long")
       }
 
@@ -19,7 +19,7 @@ public struct Path: Hashable {
 
   public var dirname: String {
     return _path.withCString { path in
-      guard let dir = observer_dirname(path) else {
+      guard let dir = hawk_dirname(path) else {
         preconditionFailure("path name too long")
       }
 

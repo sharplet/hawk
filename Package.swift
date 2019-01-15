@@ -3,11 +3,11 @@
 import PackageDescription
 
 let package = Package(
-  name: "observer",
+  name: "hawk",
   targets: [
-    .target(name: "observer", dependencies: ["Files"]),
+    .target(name: "hawk", dependencies: ["Files"]),
     .target(name: "Files", dependencies: ["Clibc"]),
     .target(name: "Clibc"),
-    .testTarget(name: "ObserverTests", dependencies: ["observer"]),
+    .testTarget(name: "HawkTests", dependencies: ["hawk"]),
   ]
 )

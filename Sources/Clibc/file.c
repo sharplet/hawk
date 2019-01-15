@@ -1,7 +1,7 @@
 #include <sys/stat.h>
 
 int
-observer_is_dir(const char *path)
+hawk_is_dir(const char *path)
 {
   struct stat path_stat;
 
