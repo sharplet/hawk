@@ -46,6 +46,8 @@ final class App {
             self.handleDirectoryChange(changeset, at: path)
           case .deleted:
             self.removeObservation(at: path)
+          case let .cancelled(previousContents):
+            previousContents.forEach { self.removeObservation(at: $0) }
           }
         }
         newObservation = Observation(observer: observer)

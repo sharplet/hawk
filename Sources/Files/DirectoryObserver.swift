@@ -1,13 +1,13 @@
 import Dispatch
 
 public final class DirectoryObserver {
-  private var contents: Set<String>
+  private let contents: Box<Set<String>>
   private var isCancelled = false
   private let queue: DispatchQueue
   private let source: DispatchSourceFileSystemObject
 
   public init(directory: Directory, target: DispatchQueue, changeHandler: @escaping (Event) -> Void) {
-    self.contents = directory.contents
+    self.contents = Box(directory.contents)
     self.queue = DispatchQueue(label: "DirectoryObserver:\(directory.file.path)", target: target)
     self.source = DispatchSource.makeFileSystemObjectSource(
       fileDescriptor: directory.file.descriptor,
@@ -22,8 +22,8 @@ public final class DirectoryObserver {
 
       case .write:
         let newContents = directory.contents
-        let changeset = Changeset(currentContents: self.contents, newContents: newContents)
-        self.contents = newContents
+        let changeset = Changeset(currentContents: self.contents.value, newContents: newContents)
+        self.contents.value = newContents
 
         if let changeset = changeset {
           changeHandler(.contentsChanged(changeset))
@@ -32,6 +32,11 @@ public final class DirectoryObserver {
       case let event:
         preconditionFailure("unexpected directory event: \(event)")
       }
+    }
+
+    self.source.setCancelHandler { [contents, path = directory.path] in
+      let contents = contents.value.map { path + $0 }
+      changeHandler(.cancelled(previousContents: contents))
     }
 
     self.source.resume()
@@ -61,6 +66,7 @@ extension DirectoryObserver {
   }
 
   public enum Event {
+    case cancelled(previousContents: [Path])
     case contentsChanged(Changeset)
     case deleted
   }

@@ -8,6 +8,10 @@ public struct Directory {
     self.file = file
   }
 
+  public var path: Path {
+    return file.path
+  }
+
   public func enumerateEntries(_ body: (Path) throws -> Void) rethrows {
     try File.forEachEntry(inDirectory: file.path) { entry in
       guard !entry.hasPrefix(".") else { return }
