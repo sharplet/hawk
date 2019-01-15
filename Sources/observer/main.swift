@@ -11,9 +11,8 @@ func showError(_ error: Error) {
 }
 
 @discardableResult
-func handleInterrupt(execute body: @escaping () -> Void) -> DispatchSourceSignal {
-  signal(SIGINT, SIG_IGN)
-  let source = DispatchSource.makeSignalSource(signal: SIGINT, queue: .main)
+func handleSignal(_ signal: Int32, execute body: @escaping () -> Void) -> DispatchSourceSignal {
+  let source = DispatchSource.makeSignalSource(signal: signal, queue: .main)
   source.setEventHandler(handler: body)
   source.setCancelHandler { _ = source }
   source.resume()
@@ -25,9 +24,12 @@ let app = App { app, error in
   app.exit(failure: true)
 }
 
-handleInterrupt {
+let interruptHandler: () -> Void = {
   app.exit()
 }
+
+handleSignal(SIGHUP, execute: interruptHandler)
+handleSignal(SIGINT, execute: interruptHandler)
 
 let paths = CommandLine.arguments.dropFirst().map(Path.init)
 app.startObserving(paths)
