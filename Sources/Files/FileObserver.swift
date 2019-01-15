@@ -14,6 +14,7 @@ public final class FileObserver {
     )
 
     self.source.setEventHandler { [unowned self] in
+      // FIXME: event is a mask, not an enum: may contain multiple events
       switch self.source.data {
       case .attrib, .write:
         changeHandler(.changed)
