@@ -1,3 +1,3 @@
 # hawk
 
-A description of this package.
+Watches your files.
